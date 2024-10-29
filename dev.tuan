@@ -1,0 +1,79 @@
+#include <stdio.h>
+
+#define MAX_PROCESSES 100
+
+typedef struct {
+    int pid;
+    int arrival_time;
+    int burst_time;
+    int remaining_time;
+    int start_time;
+    int end_time;
+} Process;
+
+void srt_scheduling(Process processes[], int n) {
+    int completed = 0, time = 0, shortest = 0, min_remaining_time = 0;
+    int is_completed[MAX_PROCESSES] = {0};
+    
+    printf("Process | Start Time | Run Time\n");
+    while (completed != n) {
+        shortest = -1;
+        min_remaining_time = __INT_MAX__;
+
+        // Tìm process có thời gian thực hiện còn lại ngắn nhất tại thời điểm hiện tại
+        for (int i = 0; i < n; i++) {
+            if (processes[i].arrival_time <= time && 
+                !is_completed[i] && 
+                processes[i].remaining_time < min_remaining_time) {
+                min_remaining_time = processes[i].remaining_time;
+                shortest = i;
+            }
+        }
+
+        if (shortest == -1) {
+            // Không có process nào đến hoặc còn lại, tăng thời gian
+            time++;
+            continue;
+        }
+
+        // Nếu là lần đầu tiên chạy process này, ghi nhận thời điểm bắt đầu
+        if (processes[shortest].remaining_time == processes[shortest].burst_time) {
+            processes[shortest].start_time = time;
+        }
+
+        // Chạy process với thời gian một đơn vị
+        processes[shortest].remaining_time--;
+        time++;
+
+        // Nếu process hoàn thành, ghi nhận thời điểm kết thúc và tăng số lượng hoàn thành
+        if (processes[shortest].remaining_time == 0) {
+            processes[shortest].end_time = time;
+            is_completed[shortest] = 1;
+            completed++;
+
+            printf("P%d      | %d         | %d\n", processes[shortest].pid, processes[shortest].start_time, processes[shortest].end_time - processes[shortest].start_time);
+        }
+    }
+}
+
+int main() {
+    int n;
+    Process processes[MAX_PROCESSES];
+
+    // Nhập số lượng process
+    printf("Nhập số lượng process: ");
+    scanf("%d", &n);
+
+    // Nhập arrival time và burst time cho từng process
+    for (int i = 0; i < n; i++) {
+        processes[i].pid = i + 1;
+        printf("Nhập Arrival Time và Burst Time cho Process %d: ", processes[i].pid);
+        scanf("%d %d", &processes[i].arrival_time, &processes[i].burst_time);
+        processes[i].remaining_time = processes[i].burst_time;
+    }
+
+    // Gọi hàm srt_scheduling để chạy thuật toán SRT
+    srt_scheduling(processes, n);
+
+    return 0;
+}
