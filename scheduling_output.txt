@@ -1,0 +1,4 @@
+Process: P2      |Start time: 1       |Run time: 2
+Process: P1      |Start time: 0       |Run time: 8
+Process: P3      |Start time: 8       |Run time: 9
+Process: P4      |Start time: 17       |Run time: 11
