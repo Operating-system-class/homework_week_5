@@ -1,74 +1,70 @@
 #include <stdio.h>
-
-#define MAX_PROCESSES 4
+#include <stdbool.h>
 
 typedef struct {
-    int pid;
-    int arrival_time;
-    int burst_time;
-    int remaining_time;
-    int start_time;
-    int end_time;
+    int processID;
+    int arrivalTime;
+    int burstTime;
+    int startTime;
+    int endTime;
+    bool isCompleted;
 } Process;
 
-void srt_scheduling(Process processes[], const int n, FILE *output_file) {
-    int completed = 0, time = 0;
-
-    while (completed != n) {
-        int shortest = -1;
-        int min_remaining_time = __INT_MAX__;
-
-        // Find the process with the shortest remaining time at the current time
-        for (int i = 0; i < n; i++) {
-            if (processes[i].arrival_time <= time && processes[i].end_time == -1 && processes[i].remaining_time < min_remaining_time) {
-                min_remaining_time = processes[i].remaining_time;
-                shortest = i;
+void sortByArrival(Process p[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (p[i].arrivalTime > p[j].arrivalTime) {
+                Process temp = p[i];
+                p[i] = p[j];
+                p[j] = temp;
             }
-        }
-
-        if (shortest == -1) {
-            // No process is ready to run, increase time
-            time++;
-            continue;
-        }
-
-        // If this is the first time the process is running, record the start time
-        if (processes[shortest].remaining_time == processes[shortest].burst_time) {
-            processes[shortest].start_time = time;
-        }
-
-        // Run the process for one unit of time
-        processes[shortest].remaining_time--;
-        time++;
-
-        // If the process is completed, record the end time and increase the completed count
-        if (processes[shortest].remaining_time == 0) {
-            processes[shortest].end_time = time;
-            completed++;
-
-            printf("Process: P%d      |Start time: %d       |Run time: %d\n", processes[shortest].pid, processes[shortest].start_time, processes[shortest].end_time - processes[shortest].start_time);
-            fprintf(output_file, "Process: P%d      |Start time: %d       |Run time: %d\n", processes[shortest].pid, processes[shortest].start_time, processes[shortest].end_time - processes[shortest].start_time);
         }
     }
 }
 
 int main() {
-    Process processes[MAX_PROCESSES] = {
-        {1, 0, 6, 6, -1, -1},
-        {2, 1, 2, 2, -1, -1},
-        {3, 3, 9, 9, -1, -1},
-        {4, 5, 11, 11, -1, -1},
+    int n = 5;  // Số lượng process
+    Process processes[] = {
+        {1, 0, 8, 0, 0, false},
+        {2, 1, 4, 0, 0, false},
+        {3, 2, 9, 0, 0, false},
+        {4, 3, 5, 0, 0, false},
+        {5, 4, 2, 0, 0, false}
     };
 
-    FILE *output_file = fopen("scheduling_output.txt", "w");
-    if (output_file == NULL) {
-        printf("Error opening file!\n");
-        return 1;
+    // Sắp xếp các process theo arrival time
+    sortByArrival(processes, n);
+
+    int currentTime = 0;
+    int completedProcesses = 0;
+
+    printf("Process\tStart Time\tBurst Time\n");
+
+    while (completedProcesses < n) {
+        int idx = -1;
+        int minBurst = 100000;
+
+        // Tìm process với burst time nhỏ nhất tại thời điểm hiện tại
+        for (int i = 0; i < n; i++) {
+            if (processes[i].arrivalTime <= currentTime && !processes[i].isCompleted && processes[i].burstTime < minBurst) {
+                minBurst = processes[i].burstTime;
+                idx = i;
+            }
+        }
+
+        if (idx != -1) {
+            processes[idx].startTime = currentTime;
+            processes[idx].endTime = currentTime + processes[idx].burstTime;
+            processes[idx].isCompleted = true;
+            currentTime = processes[idx].endTime;
+            completedProcesses++;
+
+            // In ra thông tin về quá trình thực hiện
+            printf("P%d\t%d\t\t%d\n", processes[idx].processID, processes[idx].startTime, processes[idx].burstTime);
+        } else {
+            currentTime++;
+        }
     }
 
-    // Call the SRT scheduling function
-    srt_scheduling(processes, MAX_PROCESSES, output_file);
-
-    fclose(output_file);
     return 0;
 }
